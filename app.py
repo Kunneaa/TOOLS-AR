@@ -154,30 +154,6 @@ def main():
     
     st.write("---")
     
-    # --- COMPARISON CHART ---
-    st.subheader("Overdue 7UP vs Total Overdue Accounts")
-    
-    # Count customers with Total Amt > 0
-    total_over_acc = df_month[df_month['Total Amt'] > 0]['Cust #'].nunique()
-    
-    # Count customers with > 7UP
-    cols_7up = ['7 - 13', '14 - 20', '21 - 29', '30 - 37', '38 - 45', '45 UP', '60 UP']
-    df_month['7UP_Sum'] = df_month[cols_7up].sum(axis=1)
-    acc_7up = df_month[df_month['7UP_Sum'] > 0]['Cust #'].nunique()
-    
-    fig_comp = px.bar(
-        x=['Total Overdue Accounts', 'Overdue 7 UP Accounts'],
-        y=[total_over_acc, acc_7up],
-        text=[total_over_acc, acc_7up],
-        color=['Total', '7 UP'],
-        color_discrete_sequence=['#4C72B0', '#DD8452']
-    )
-    fig_comp.update_traces(textposition='inside')
-    fig_comp.update_layout(xaxis_title="", yaxis_title="No. of Customers", showlegend=False)
-    st.plotly_chart(fig_comp, use_container_width=True)
-    
-    st.write("---")
-    
     # --- TREND CHARTS (EDIT INTERACTIONS: Ignore Date Filter) ---
     st.subheader("Trend Analysis (Historical Snapshot Data)")
     st.caption("This chart retains the full history for the selected filters, ignoring the Report Date slicer.")
@@ -190,6 +166,34 @@ def main():
     
     # Format Date as string for categorical x-axis
     df_trend['Date_Str'] = df_trend['Report_Date'].dt.strftime("%Y-%m-%d")
+    
+    # --- COMPARISON CHART ---
+    cols_7up = ['7 - 13', '14 - 20', '21 - 29', '30 - 37', '38 - 45', '45 UP', '60 UP']
+    df_trend['7UP_Sum'] = df_trend[cols_7up].sum(axis=1)
+    
+    comp_trend = df_trend.groupby('Date_Str').apply(
+        lambda x: pd.Series({
+            'Total Overdue Accounts': x[x['Total Amt'] > 0]['Cust #'].nunique(),
+            'Overdue 7 UP Accounts': x[x['7UP_Sum'] > 0]['Cust #'].nunique()
+        })
+    ).reset_index()
+
+    comp_trend_melted = comp_trend.melt(id_vars='Date_Str', var_name='Category', value_name='Customers')
+
+    fig_comp = px.bar(
+        comp_trend_melted, 
+        x='Date_Str', 
+        y='Customers',
+        color='Category',
+        barmode='group',
+        text_auto='.0f',
+        title="Comparison: Overdue 7UP vs Total Overdue Accounts",
+        color_discrete_sequence=['#4C72B0', '#DD8452']
+    )
+    fig_comp.update_layout(xaxis_type='category', xaxis_title="", yaxis_title="No. of Customers", legend_title_text="")
+    st.plotly_chart(fig_comp, use_container_width=True)
+    
+    st.write("---")
     
     # Group by date
     trend_group = df_trend.groupby('Date_Str')[cols_7up + ['0 - 6', 'Total Amt']].sum().reset_index()
