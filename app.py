@@ -8,21 +8,22 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="AR Dashboard", page_icon="💰", layout="wide")
+st.set_page_config(page_title="AR Dashboard", layout="wide")
 
 # --- CSS STYLING ---
 st.markdown("""
 <style>
     .kpi-card {
-        background-color: #1E1E1E;
+        background-color: #FFFFFF;
         padding: 20px;
         border-radius: 10px;
-        color: white;
+        color: #333333;
         text-align: center;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        border: 1px solid #E0E0E0;
     }
-    .kpi-title { font-size: 16px; color: #aaaaaa; }
-    .kpi-value { font-size: 30px; font-weight: bold; margin-top: 10px; }
+    .kpi-title { font-size: 16px; color: #666666; }
+    .kpi-value { font-size: 30px; font-weight: bold; margin-top: 10px; color: #1E88E5; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -102,7 +103,7 @@ def load_data():
 
 # --- MAIN APP ---
 def main():
-    st.title("💰 C-Level AR Dashboard")
+    st.title("C-Level AR Dashboard")
     
     df = load_data()
     
