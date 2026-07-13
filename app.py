@@ -102,6 +102,13 @@ def load_data():
     # Fill missing AR persons just in case
     df_merged['ar_person'] = df_merged['ar_person'].fillna("Unassigned").astype(str)
     
+    # Precompute heavy columns to prevent Streamlit memory spikes on rerun
+    df_merged['Date_Str'] = df_merged['Report_Date'].dt.strftime("%Y-%m-%d")
+    cols_7up = ['7 - 13', '14 - 20', '21 - 29', '30 - 37', '38 - 45', '45 UP', '60 UP']
+    df_merged['7UP_Sum'] = df_merged[cols_7up].sum(axis=1)
+    df_merged['Is_Total_Overdue'] = df_merged['Total Amt'] > 0
+    df_merged['Is_7UP_Overdue'] = df_merged['7UP_Sum'] > 0
+    
     return df_merged
 
 # --- MAIN APP ---
@@ -169,19 +176,17 @@ def main():
     if selected_sales != "All": df_trend = df_trend[df_trend['Sales Person Code'] == selected_sales]
     if selected_cust != "All": df_trend = df_trend[df_trend['Name'] == selected_cust]
     
-    # Format Date as string for categorical x-axis
-    df_trend['Date_Str'] = df_trend['Report_Date'].dt.strftime("%Y-%m-%d")
-    
     # --- COMPARISON CHART ---
     cols_7up = ['7 - 13', '14 - 20', '21 - 29', '30 - 37', '38 - 45', '45 UP', '60 UP']
-    df_trend['7UP_Sum'] = df_trend[cols_7up].sum(axis=1)
     
-    comp_trend = df_trend.groupby('Date_Str').apply(
-        lambda x: pd.Series({
-            'Total Overdue Accounts': x[x['Total Amt'] > 0]['Cust #'].nunique(),
-            'Overdue 7 UP Accounts': x[x['7UP_Sum'] > 0]['Cust #'].nunique()
-        })
-    ).reset_index()
+    # Fast vectorized groupby (avoids memory spikes and timeout crashes)
+    total_overdue = df_trend[df_trend['Is_Total_Overdue']].groupby('Date_Str')['Cust #'].nunique()
+    up7_overdue = df_trend[df_trend['Is_7UP_Overdue']].groupby('Date_Str')['Cust #'].nunique()
+    
+    comp_trend = pd.DataFrame({
+        'Total Overdue Accounts': total_overdue,
+        'Overdue 7 UP Accounts': up7_overdue
+    }).fillna(0).reset_index()
 
     comp_trend_melted = comp_trend.melt(id_vars='Date_Str', var_name='Category', value_name='Customers')
 
