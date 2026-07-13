@@ -36,6 +36,7 @@ def load_data():
     if not os.path.exists(mapping_file):
         return pd.DataFrame()
     df_mapping = pd.read_excel(mapping_file)
+    df_mapping['sales_person_code'] = df_mapping['sales_person_code'].astype(str)
     df_mapping['Valid_From'] = pd.to_datetime(df_mapping['Valid_From'])
     df_mapping['Valid_To'] = pd.to_datetime(df_mapping['Valid_To'])
     
@@ -87,6 +88,8 @@ def load_data():
         return pd.DataFrame()
         
     df_all = pd.concat(all_data, ignore_index=True)
+    df_all['Sales Person Code'] = df_all['Sales Person Code'].astype(str).replace('nan', 'Unknown')
+    df_all['Name'] = df_all['Name'].astype(str).replace('nan', 'Unknown')
     
     # 3. Apply SCD Type 2 Mapping
     df_merged = pd.merge(df_all, df_mapping, how="left", left_on="Sales Person Code", right_on="sales_person_code")
@@ -97,7 +100,7 @@ def load_data():
     df_merged = df_merged[mask_mapped | mask_unmapped]
     
     # Fill missing AR persons just in case
-    df_merged['ar_person'] = df_merged['ar_person'].fillna("Unassigned")
+    df_merged['ar_person'] = df_merged['ar_person'].fillna("Unassigned").astype(str)
     
     return df_merged
 
@@ -137,6 +140,10 @@ def main():
     selected_cust = st.sidebar.selectbox("Customer", customers)
     if selected_cust != "All":
         df_month = df_month[df_month['Name'] == selected_cust]
+
+    if df_month.empty:
+        st.warning("No data matches the selected filters.")
+        return
 
     # --- KPI CARDS ---
     total_ar = df_month['Bal Due'].sum()
