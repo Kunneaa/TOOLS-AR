@@ -114,14 +114,11 @@ def main():
     # --- SIDEBAR FILTERS ---
     st.sidebar.header("Filters")
     
-    # Date Filter (Instead of Month to prevent snapshot duplication)
-    available_dates = sorted(df['Report_Date'].unique(), reverse=False)
-    date_strs = [d.strftime("%Y-%m-%d") for d in available_dates]
-    selected_date_str = st.sidebar.selectbox("Report Date", date_strs, index=len(date_strs)-1)
-    selected_date = pd.to_datetime(selected_date_str)
+    # Automatically use the latest Report Date for the current snapshot (no UI filter needed)
+    latest_date = df['Report_Date'].max()
+    df_month = df[df['Report_Date'] == latest_date]
     
-    # Cascading Logic
-    df_month = df[df['Report_Date'] == selected_date]
+    st.sidebar.markdown(f"**Current Report Date:** {latest_date.strftime('%Y-%m-%d')}")
     
     # AR Person Filter
     ar_persons = ["All"] + sorted(df_month['ar_person'].unique().tolist())
