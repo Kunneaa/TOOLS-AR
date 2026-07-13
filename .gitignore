@@ -26,12 +26,9 @@ backend/data/imports/
 backend/data/archive/
 backend/data/mapping/
 backend/exports/
-data/
-exports/
 *.db
 *.sqlite3
 *.csv
-*.xlsx
 
 # Logs
 *.log
