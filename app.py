@@ -132,19 +132,19 @@ def main():
     
     # AR Person Filter
     ar_persons = ["All"] + sorted(df_month['ar_person'].unique().tolist())
-    selected_ar = st.sidebar.selectbox("AR Person", ar_persons)
+    selected_ar = st.sidebar.selectbox("AR Person", ar_persons, key="ar_filter")
     if selected_ar != "All":
         df_month = df_month[df_month['ar_person'] == selected_ar]
         
     # Sales Person Filter
     sales_persons = ["All"] + sorted(df_month['Sales Person Code'].unique().tolist())
-    selected_sales = st.sidebar.selectbox("Sales Person", sales_persons)
+    selected_sales = st.sidebar.selectbox("Sales Person", sales_persons, key=f"sales_filter_{selected_ar}")
     if selected_sales != "All":
         df_month = df_month[df_month['Sales Person Code'] == selected_sales]
         
     # Customer Filter
     customers = ["All"] + sorted(df_month['Name'].unique().tolist())
-    selected_cust = st.sidebar.selectbox("Customer", customers)
+    selected_cust = st.sidebar.selectbox("Customer", customers, key=f"cust_filter_{selected_ar}_{selected_sales}")
     if selected_cust != "All":
         df_month = df_month[df_month['Name'] == selected_cust]
 
